@@ -1,0 +1,58 @@
+from hilite.rendering import render_html
+from hilite.grammar import Grammar, GrammarRegistry
+from hilite.highlighter import CacheInfo, highlight, Highlighter
+from hilite.errors import (
+    ThemeError,
+    GrammarError,
+    SelectionError,
+    HighlighterError,
+    HtmlRenderingError,
+    ResourceLimitError,
+    MissingGrammarError,
+    UnsupportedPatternError,
+)
+from hilite.models import (
+    Style,
+    Theme,
+    UNSET,
+    DEFAULT,
+    ThemeRule,
+    TokenSpan,
+    HtmlLayout,
+    GutterStyle,
+    LineOptions,
+    LineSelection,
+    TokenizedCode,
+    ResourceLimits,
+    LineHighlightStyle,
+)
+
+__all__ = [
+    'DEFAULT',
+    'UNSET',
+    'CacheInfo',
+    'Grammar',
+    'GrammarError',
+    'GrammarRegistry',
+    'GutterStyle',
+    'Highlighter',
+    'HighlighterError',
+    'HtmlLayout',
+    'HtmlRenderingError',
+    'LineHighlightStyle',
+    'LineOptions',
+    'LineSelection',
+    'MissingGrammarError',
+    'ResourceLimitError',
+    'ResourceLimits',
+    'SelectionError',
+    'Style',
+    'Theme',
+    'ThemeError',
+    'ThemeRule',
+    'TokenSpan',
+    'TokenizedCode',
+    'UnsupportedPatternError',
+    'highlight',
+    'render_html',
+]

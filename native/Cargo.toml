@@ -1,0 +1,21 @@
+[package]
+name = 'hilite-oniguruma'
+version = '0.1.0'
+edition = '2024'
+license = 'MIT'
+publish = false
+
+[lib]
+name = '_oniguruma'
+crate-type = ['cdylib']
+
+[dependencies]
+pyo3 = { version = '=0.29.2', default-features = false, features = ['macros', 'extension-module'] }
+
+[build-dependencies]
+cc = '1.2'
+
+[profile.release]
+lto = 'thin'
+codegen-units = 1
+strip = 'debuginfo'

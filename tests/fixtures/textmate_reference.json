@@ -1,0 +1,1479 @@
+{
+  "reference": {
+    "textmate": "9.3.2",
+    "oniguruma": "2.0.1"
+  },
+  "cases": [
+    {
+      "name": "begin-end",
+      "source": "a \"x\\ny\" z\n\"unclosed",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "begin": "\"",
+            "end": "\"",
+            "name": "string.quoted",
+            "contentName": "string.content",
+            "patterns": [
+              {
+                "match": "\\\\.",
+                "name": "escape"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "a",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "\"",
+            [
+              "source.test",
+              "string.quoted"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "\\",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content",
+              "escape"
+            ]
+          ],
+          [
+            "n",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content",
+              "escape"
+            ]
+          ],
+          [
+            "y",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "\"",
+            [
+              "source.test",
+              "string.quoted"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "z",
+            [
+              "source.test"
+            ]
+          ]
+        ],
+        [
+          [
+            "\"",
+            [
+              "source.test",
+              "string.quoted"
+            ]
+          ],
+          [
+            "u",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "n",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "c",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "l",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "o",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "s",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "e",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ],
+          [
+            "d",
+            [
+              "source.test",
+              "string.quoted",
+              "string.content"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "newline-rule",
+      "source": "a\nb\r\nc\rd",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": ".+\\n",
+            "name": "line.with-break"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "a",
+            [
+              "source.test",
+              "line.with-break"
+            ]
+          ]
+        ],
+        [
+          [
+            "b",
+            [
+              "source.test",
+              "line.with-break"
+            ]
+          ]
+        ],
+        [
+          [
+            "c",
+            [
+              "source.test",
+              "line.with-break"
+            ]
+          ]
+        ],
+        [
+          [
+            "d",
+            [
+              "source.test",
+              "line.with-break"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "while-search",
+      "source": "list:\n xx item\nstop",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "begin": "^list:",
+            "while": "xx ",
+            "name": "meta.list",
+            "contentName": "list.content",
+            "whileCaptures": {
+              "0": {
+                "name": "while.capture"
+              }
+            }
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "l",
+            [
+              "source.test",
+              "meta.list"
+            ]
+          ],
+          [
+            "i",
+            [
+              "source.test",
+              "meta.list"
+            ]
+          ],
+          [
+            "s",
+            [
+              "source.test",
+              "meta.list"
+            ]
+          ],
+          [
+            "t",
+            [
+              "source.test",
+              "meta.list"
+            ]
+          ],
+          [
+            ":",
+            [
+              "source.test",
+              "meta.list"
+            ]
+          ]
+        ],
+        [
+          [
+            " ",
+            [
+              "source.test",
+              "meta.list",
+              "list.content"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "meta.list",
+              "list.content",
+              "while.capture"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "meta.list",
+              "list.content",
+              "while.capture"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test",
+              "meta.list",
+              "list.content",
+              "while.capture"
+            ]
+          ],
+          [
+            "i",
+            [
+              "source.test",
+              "meta.list",
+              "list.content"
+            ]
+          ],
+          [
+            "t",
+            [
+              "source.test",
+              "meta.list",
+              "list.content"
+            ]
+          ],
+          [
+            "e",
+            [
+              "source.test",
+              "meta.list",
+              "list.content"
+            ]
+          ],
+          [
+            "m",
+            [
+              "source.test",
+              "meta.list",
+              "list.content"
+            ]
+          ]
+        ],
+        [
+          [
+            "s",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "t",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "o",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "p",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "dynamic-end",
+      "source": "<<END\nbody\nEND\nplain",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "begin": "<<([A-Z]+)",
+            "end": "^\\1$",
+            "name": "meta.heredoc",
+            "contentName": "string.heredoc"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "<",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ],
+          [
+            "<",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ],
+          [
+            "E",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ],
+          [
+            "N",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ],
+          [
+            "D",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ]
+        ],
+        [
+          [
+            "b",
+            [
+              "source.test",
+              "meta.heredoc",
+              "string.heredoc"
+            ]
+          ],
+          [
+            "o",
+            [
+              "source.test",
+              "meta.heredoc",
+              "string.heredoc"
+            ]
+          ],
+          [
+            "d",
+            [
+              "source.test",
+              "meta.heredoc",
+              "string.heredoc"
+            ]
+          ],
+          [
+            "y",
+            [
+              "source.test",
+              "meta.heredoc",
+              "string.heredoc"
+            ]
+          ]
+        ],
+        [
+          [
+            "E",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ],
+          [
+            "N",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ],
+          [
+            "D",
+            [
+              "source.test",
+              "meta.heredoc"
+            ]
+          ]
+        ],
+        [
+          [
+            "p",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "l",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "a",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "i",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "n",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "dynamic-names",
+      "source": "ABC",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "(ABC)",
+            "name": "entity.${1:/downcase} meta.$1",
+            "captures": {
+              "1": {
+                "name": "capture.$1"
+              }
+            }
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "A",
+            [
+              "source.test",
+              "entity.abc",
+              "meta.ABC",
+              "capture.ABC"
+            ]
+          ],
+          [
+            "B",
+            [
+              "source.test",
+              "entity.abc",
+              "meta.ABC",
+              "capture.ABC"
+            ]
+          ],
+          [
+            "C",
+            [
+              "source.test",
+              "entity.abc",
+              "meta.ABC",
+              "capture.ABC"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "nested-captures",
+      "source": "abc",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "((ab)c)",
+            "captures": {
+              "0": {
+                "name": "whole"
+              },
+              "1": {
+                "name": "outer"
+              },
+              "2": {
+                "name": "inner"
+              }
+            }
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "a",
+            [
+              "source.test",
+              "whole",
+              "outer",
+              "inner"
+            ]
+          ],
+          [
+            "b",
+            [
+              "source.test",
+              "whole",
+              "outer",
+              "inner"
+            ]
+          ],
+          [
+            "c",
+            [
+              "source.test",
+              "whole",
+              "outer"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "capture-outside",
+      "source": "abc",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "(?<=(a))(b)(?=(c))",
+            "captures": {
+              "1": {
+                "name": "before"
+              },
+              "2": {
+                "name": "inside"
+              },
+              "3": {
+                "name": "after"
+              }
+            }
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "a",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "b",
+            [
+              "source.test",
+              "inside"
+            ]
+          ],
+          [
+            "c",
+            [
+              "source.test",
+              "after"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "end-last",
+      "source": "[xx]",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "begin": "\\[",
+            "end": "x|\\]",
+            "name": "brackets",
+            "applyEndPatternLast": true,
+            "patterns": [
+              {
+                "match": "x",
+                "name": "letter"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "[",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "brackets",
+              "letter"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "brackets",
+              "letter"
+            ]
+          ],
+          [
+            "]",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "end-first",
+      "source": "[xx]",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "begin": "\\[",
+            "end": "x|\\]",
+            "name": "brackets",
+            "patterns": [
+              {
+                "match": "x",
+                "name": "letter"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "[",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "]",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "g-root",
+      "source": "word word\nword",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "\\Gword",
+            "name": "anchored"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "w",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "o",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "r",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "d",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "w",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "o",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "r",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "d",
+            [
+              "source.test"
+            ]
+          ]
+        ],
+        [
+          [
+            "w",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "o",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "r",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "d",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "g-begin",
+      "source": "[xx]\n[x\nx]",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "begin": "\\[",
+            "end": "\\]",
+            "name": "brackets",
+            "patterns": [
+              {
+                "match": "\\Gx",
+                "name": "anchored"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "[",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "brackets",
+              "anchored"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ],
+          [
+            "]",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ]
+        ],
+        [
+          [
+            "[",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test",
+              "brackets",
+              "anchored"
+            ]
+          ]
+        ],
+        [
+          [
+            "x",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ],
+          [
+            "]",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "g-newline",
+      "source": "[\nx\nx]",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "begin": "\\[\\n",
+            "end": "\\]",
+            "name": "brackets",
+            "patterns": [
+              {
+                "match": "\\Gx",
+                "name": "anchored"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "[",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ]
+        ],
+        [
+          [
+            "x",
+            [
+              "source.test",
+              "brackets",
+              "anchored"
+            ]
+          ]
+        ],
+        [
+          [
+            "x",
+            [
+              "source.test",
+              "brackets",
+              "anchored"
+            ]
+          ],
+          [
+            "]",
+            [
+              "source.test",
+              "brackets"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "unicode",
+      "source": "a😀β\n𝄞",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "😀|𝄞",
+            "name": "astral"
+          },
+          {
+            "match": "β",
+            "name": "greek"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "a",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "😀",
+            [
+              "source.test",
+              "astral"
+            ]
+          ],
+          [
+            "β",
+            [
+              "source.test",
+              "greek"
+            ]
+          ]
+        ],
+        [
+          [
+            "𝄞",
+            [
+              "source.test",
+              "astral"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "injection",
+      "source": "TODO [TODO]",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "TODO",
+            "name": "ordinary"
+          },
+          {
+            "begin": "\\[",
+            "end": "\\]",
+            "name": "bracket"
+          }
+        ],
+        "injections": {
+          "L:source.test - bracket": {
+            "match": "TODO",
+            "name": "injected"
+          }
+        }
+      },
+      "expected": [
+        [
+          [
+            "T",
+            [
+              "source.test",
+              "injected"
+            ]
+          ],
+          [
+            "O",
+            [
+              "source.test",
+              "injected"
+            ]
+          ],
+          [
+            "D",
+            [
+              "source.test",
+              "injected"
+            ]
+          ],
+          [
+            "O",
+            [
+              "source.test",
+              "injected"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "[",
+            [
+              "source.test",
+              "bracket"
+            ]
+          ],
+          [
+            "T",
+            [
+              "source.test",
+              "bracket"
+            ]
+          ],
+          [
+            "O",
+            [
+              "source.test",
+              "bracket"
+            ]
+          ],
+          [
+            "D",
+            [
+              "source.test",
+              "bracket"
+            ]
+          ],
+          [
+            "O",
+            [
+              "source.test",
+              "bracket"
+            ]
+          ],
+          [
+            "]",
+            [
+              "source.test",
+              "bracket"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "onig-hex",
+      "source": " 09aF xyz",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "\\h+",
+            "name": "hex"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "0",
+            [
+              "source.test",
+              "hex"
+            ]
+          ],
+          [
+            "9",
+            [
+              "source.test",
+              "hex"
+            ]
+          ],
+          [
+            "a",
+            [
+              "source.test",
+              "hex"
+            ]
+          ],
+          [
+            "F",
+            [
+              "source.test",
+              "hex"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "x",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "y",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "z",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "onig-recursion",
+      "source": "(a(b)c) d",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "(?<pair>\\((?:[^()]|\\g<pair>)*\\))",
+            "name": "balanced"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "(",
+            [
+              "source.test",
+              "balanced"
+            ]
+          ],
+          [
+            "a",
+            [
+              "source.test",
+              "balanced"
+            ]
+          ],
+          [
+            "(",
+            [
+              "source.test",
+              "balanced"
+            ]
+          ],
+          [
+            "b",
+            [
+              "source.test",
+              "balanced"
+            ]
+          ],
+          [
+            ")",
+            [
+              "source.test",
+              "balanced"
+            ]
+          ],
+          [
+            "c",
+            [
+              "source.test",
+              "balanced"
+            ]
+          ],
+          [
+            ")",
+            [
+              "source.test",
+              "balanced"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "d",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "onig-named-backref",
+      "source": "éé éé 😀",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "(?<word>\\p{L}+)\\s+\\k<word>",
+            "name": "repeated"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "é",
+            [
+              "source.test",
+              "repeated"
+            ]
+          ],
+          [
+            "é",
+            [
+              "source.test",
+              "repeated"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test",
+              "repeated"
+            ]
+          ],
+          [
+            "é",
+            [
+              "source.test",
+              "repeated"
+            ]
+          ],
+          [
+            "é",
+            [
+              "source.test",
+              "repeated"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "😀",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "onig-class-intersection",
+      "source": "aei bcdf ou",
+      "grammar": {
+        "scopeName": "source.test",
+        "patterns": [
+          {
+            "match": "[a-z&&[^aeiou]]+",
+            "name": "consonants"
+          }
+        ]
+      },
+      "expected": [
+        [
+          [
+            "a",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "e",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "i",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "b",
+            [
+              "source.test",
+              "consonants"
+            ]
+          ],
+          [
+            "c",
+            [
+              "source.test",
+              "consonants"
+            ]
+          ],
+          [
+            "d",
+            [
+              "source.test",
+              "consonants"
+            ]
+          ],
+          [
+            "f",
+            [
+              "source.test",
+              "consonants"
+            ]
+          ],
+          [
+            " ",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "o",
+            [
+              "source.test"
+            ]
+          ],
+          [
+            "u",
+            [
+              "source.test"
+            ]
+          ]
+        ]
+      ]
+    }
+  ]
+}

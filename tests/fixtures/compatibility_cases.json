@@ -1,0 +1,674 @@
+[
+  {
+    "name": "nested-shadow-and-sibling",
+    "source": "a b c",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "patterns": [
+            {
+              "include": "#local"
+            },
+            {
+              "include": "#sibling"
+            }
+          ],
+          "repository": {
+            "local": {
+              "match": "a",
+              "name": "local.a"
+            },
+            "sibling": {
+              "match": "b",
+              "name": "local.b"
+            }
+          }
+        },
+        {
+          "include": "#local"
+        }
+      ],
+      "repository": {
+        "local": {
+          "match": "c",
+          "name": "root.c"
+        }
+      }
+    }
+  },
+  {
+    "name": "nested-parent-reference",
+    "source": "a b",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "patterns": [
+            {
+              "include": "#inner"
+            }
+          ],
+          "repository": {
+            "inner": {
+              "patterns": [
+                {
+                  "include": "#outer"
+                },
+                {
+                  "include": "#leaf"
+                }
+              ],
+              "repository": {
+                "leaf": {
+                  "match": "b",
+                  "name": "nested.b"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "repository": {
+        "outer": {
+          "match": "a",
+          "name": "parent.a"
+        }
+      }
+    }
+  },
+  {
+    "name": "nested-recursive-includes",
+    "source": "(a(a))",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "include": "#outer"
+        }
+      ],
+      "repository": {
+        "outer": {
+          "patterns": [
+            {
+              "begin": "\\(",
+              "end": "\\)",
+              "name": "group",
+              "patterns": [
+                {
+                  "include": "#outer"
+                }
+              ]
+            },
+            {
+              "include": "#letter"
+            }
+          ],
+          "repository": {
+            "letter": {
+              "match": "a",
+              "name": "letter"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "capture-local-repository",
+    "source": "[abc 12]",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[([^]]+)\\]",
+          "name": "outer",
+          "captures": {
+            "1": {
+              "name": "capture",
+              "contentName": "capture.content",
+              "patterns": [
+                {
+                  "include": "#digits"
+                }
+              ],
+              "repository": {
+                "digits": {
+                  "match": "\\d+",
+                  "name": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-line-context-and-unicode",
+    "source": "😀[abc]\r\n😀[abc]",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[([^]]+)\\]",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "match": "^a",
+                  "name": "wrong"
+                },
+                {
+                  "match": "(?<=\\[)a",
+                  "name": "lookbehind"
+                },
+                {
+                  "match": "c$",
+                  "name": "capture.end"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "nested-capture-retokenization",
+    "source": "[abc 12]",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[([^]]+)\\]",
+          "name": "outer",
+          "captures": {
+            "1": {
+              "name": "inner",
+              "patterns": [
+                {
+                  "match": "(\\w+)",
+                  "name": "word",
+                  "captures": {
+                    "1": {
+                      "name": "nested",
+                      "patterns": [
+                        {
+                          "match": "\\d",
+                          "name": "digit"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-with-other-captures",
+    "source": "abc",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "((a)(b)c)",
+          "name": "match",
+          "captures": {
+            "0": {
+              "name": "whole"
+            },
+            "1": {
+              "name": "body"
+            },
+            "2": {
+              "name": "a.capture",
+              "patterns": [
+                {
+                  "match": "a",
+                  "name": "a.inner"
+                }
+              ]
+            },
+            "3": {
+              "name": "b.capture"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-begin-and-end",
+    "source": "<ab>cd</ef>",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "begin": "<(ab)>",
+          "end": "</(ef)>",
+          "name": "block",
+          "beginCaptures": {
+            "1": {
+              "name": "begin",
+              "patterns": [
+                {
+                  "match": "a",
+                  "name": "begin.a"
+                }
+              ]
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "end",
+              "patterns": [
+                {
+                  "match": "f",
+                  "name": "end.f"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-while",
+    "source": "start\n>ab body\nend",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "begin": "start$",
+          "while": "^(>ab)",
+          "name": "block",
+          "whileCaptures": {
+            "1": {
+              "name": "prefix",
+              "patterns": [
+                {
+                  "match": "ab",
+                  "name": "word"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-discard-unclosed-state",
+    "source": "[abc] plain\nnext",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[([^]]+)\\]",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "begin": "a",
+                  "end": "NEVER",
+                  "name": "inside"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-external-and-base",
+    "source": "[x]",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[(x)\\]",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "source.child"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "external": [
+      {
+        "scopeName": "source.child",
+        "patterns": [
+          {
+            "match": "x",
+            "name": "child.x"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "capture-empty-patterns",
+    "source": "abc",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "(abc)",
+          "captures": {
+            "1": {
+              "name": "capture",
+              "contentName": "content",
+              "patterns": []
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "injection-grouped-exclusions",
+    "source": "word \"word\" #word",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string"
+        },
+        {
+          "match": "#.*",
+          "name": "comment"
+        },
+        {
+          "match": "word",
+          "name": "ordinary"
+        }
+      ],
+      "injections": {
+        "L:(source.test | text.html) - (string | comment)": {
+          "match": "word",
+          "name": "injected"
+        }
+      }
+    }
+  },
+  {
+    "name": "injection-negative-only",
+    "source": "word \"word\"",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string"
+        },
+        {
+          "match": "word",
+          "name": "ordinary"
+        }
+      ],
+      "injections": {
+        "L:-string": {
+          "match": "word",
+          "name": "injected"
+        }
+      }
+    }
+  },
+  {
+    "name": "injection-grouped-comma",
+    "source": "word",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "word",
+          "name": "ordinary"
+        }
+      ],
+      "injections": {
+        "L:(text.html, source.test) -(comment, string)": {
+          "match": "word",
+          "name": "injected"
+        }
+      }
+    }
+  },
+  {
+    "name": "capture-injection",
+    "source": "[word]",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[(word)\\]",
+          "captures": {
+            "1": {
+              "name": "capture",
+              "patterns": []
+            }
+          }
+        }
+      ],
+      "injections": {
+        "L:source.test capture - comment": {
+          "match": "word",
+          "name": "injected"
+        }
+      }
+    }
+  },
+  {
+    "name": "injection-right-priority",
+    "source": "x",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [],
+      "injections": {
+        "R:(source.test)": {
+          "match": "x",
+          "name": "right"
+        },
+        "source.test": {
+          "match": "x",
+          "name": "normal"
+        }
+      }
+    }
+  },
+  {
+    "name": "capture-dynamic-names",
+    "source": "Ab",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "(Ab)",
+          "name": "outer.$1",
+          "captures": {
+            "1": {
+              "name": "capture.${1:/downcase}",
+              "contentName": "content.$1",
+              "patterns": [
+                {
+                  "match": "b",
+                  "name": "letter"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-overlapping-retokenizers",
+    "source": "abcd",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "((ab)c)(d)",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "match": "c",
+                  "name": "outer.c"
+                }
+              ]
+            },
+            "2": {
+              "patterns": [
+                {
+                  "match": "a",
+                  "name": "ignored.a"
+                }
+              ]
+            },
+            "3": {
+              "patterns": [
+                {
+                  "match": "d",
+                  "name": "separate.d"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-pattern-does-not-escape",
+    "source": "[abc]tail",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[([^]]+)\\]",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "match": "c.*",
+                  "name": "clipped"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-self-include",
+    "source": "[a]",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[(a)\\]",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "$self"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "match": "a",
+          "name": "letter"
+        }
+      ]
+    }
+  },
+  {
+    "name": "capture-nested-repository-shadows-root",
+    "source": "[x]x",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[(x)\\]",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "#letter"
+                }
+              ],
+              "repository": {
+                "letter": {
+                  "match": "x",
+                  "name": "local"
+                }
+              }
+            }
+          }
+        },
+        {
+          "include": "#letter"
+        }
+      ],
+      "repository": {
+        "letter": {
+          "match": "x",
+          "name": "outer"
+        }
+      }
+    }
+  },
+  {
+    "name": "capture-external-base",
+    "source": "[x]",
+    "grammar": {
+      "scopeName": "source.test",
+      "patterns": [
+        {
+          "match": "\\[(x)\\]",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "source.child"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "match": "x",
+          "name": "base.x"
+        }
+      ]
+    },
+    "external": [
+      {
+        "scopeName": "source.child",
+        "patterns": [
+          {
+            "include": "$base"
+          }
+        ]
+      }
+    ]
+  }
+]

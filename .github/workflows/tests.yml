@@ -1,0 +1,128 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: Set up Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+          rustup default stable
+      - name: Create virtual environment
+        run: python -m venv .venv
+      - name: Select virtual environment
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            echo "$GITHUB_WORKSPACE/.venv/Scripts" >> "$GITHUB_PATH"
+          else
+            echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+          fi
+      - run: python -m pip install -e ".[dev,browser-test]"
+      - name: Check release version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          from os import environ
+          from pathlib import Path
+          from tomllib import loads
+
+          version = loads(Path('pyproject.toml').read_text())['project']['version']
+          tag = environ.get('RELEASE_TAG', '')
+          if tag and tag != f'v{version}':
+              raise SystemExit(f'Release tag {tag!r} does not match version {version!r}')
+          print(f'Checking hilite {version}')
+          PY
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python -m mypy
+      - name: Check Rust
+        run: |
+          export PYO3_PYTHON="$(python -c 'import sys; print(sys.executable)')"
+          cargo fmt --manifest-path native/Cargo.toml --check
+          cargo clippy --locked --manifest-path native/Cargo.toml --lib -- -D warnings
+      - name: Build the source archive
+        run: python -m build --sdist
+      - name: Build the native wheel from the source archive
+        run: |
+          python -m pip install cibuildwheel==4.2.1
+          python -m cibuildwheel dist/*.tar.gz --output-dir wheelhouse
+      - run: python -m twine check --strict dist/* wheelhouse/*.whl
+      - name: Install the built wheel
+        run: python -m pip install --force-reinstall --no-deps wheelhouse/*.whl
+      - name: Confirm imports come from the installed wheel
+        run: |
+          python -I - <<'PY'
+          import hilite
+          from sys import prefix
+          from pathlib import Path
+          from hilite import _oniguruma
+
+          for module in (hilite, _oniguruma):
+              if not Path(module.__file__).resolve().is_relative_to(Path(prefix).resolve()):
+                  raise SystemExit(f'Imported checkout instead of installed wheel: {module.__file__}')
+              print(module.__file__)
+          PY
+      - name: Set up Chromium
+        run: |
+          python -m playwright install --with-deps chromium
+          python - <<'PY'
+          from os import environ
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+
+          with sync_playwright() as runtime:
+              executable = runtime.chromium.executable_path
+          with Path(environ['GITHUB_ENV']).open('a', encoding='utf-8') as stream:
+              stream.write(f'HILITE_BROWSER={executable}\n')
+          PY
+      - name: Test the installed wheel with coverage
+        run: |
+          test_dir=$(mktemp -d)
+          cp -R tests examples "$test_dir/"
+          cp pyproject.toml "$test_dir/"
+          cd "$test_dir"
+          python -m pytest --import-mode=importlib --cov=hilite --cov-branch
+          python -m examples.basic_snippets -o language-gallery.html
+          python -m examples.themes_and_overrides -o theme-gallery.html
+          python -m examples.lines_and_layout -o line-layout.html
+      - run: python -m pip check
+      - name: Collect validated distributions
+        run: |
+          mkdir -p validated-dist
+          cp wheelhouse/*.whl validated-dist/
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            cp dist/*.tar.gz validated-dist/
+          fi
+      - name: Save validated distributions
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-distributions-${{ matrix.os }}
+          path: validated-dist/*
+          if-no-files-found: error
+          retention-days: 14

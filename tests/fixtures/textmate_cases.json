@@ -1,0 +1,20 @@
+[
+  {"name":"begin-end", "source":"a \"x\\ny\" z\n\"unclosed", "grammar":{"scopeName":"source.test","patterns":[{"begin":"\"","end":"\"","name":"string.quoted","contentName":"string.content","patterns":[{"match":"\\\\.","name":"escape"}]}]}},
+  {"name":"newline-rule", "source":"a\nb\r\nc\rd", "grammar":{"scopeName":"source.test","patterns":[{"match":".+\\n","name":"line.with-break"}]}},
+  {"name":"while-search", "source":"list:\n xx item\nstop", "grammar":{"scopeName":"source.test","patterns":[{"begin":"^list:","while":"xx ","name":"meta.list","contentName":"list.content","whileCaptures":{"0":{"name":"while.capture"}}}]}},
+  {"name":"dynamic-end", "source":"<<END\nbody\nEND\nplain", "grammar":{"scopeName":"source.test","patterns":[{"begin":"<<([A-Z]+)","end":"^\\1$","name":"meta.heredoc","contentName":"string.heredoc"}]}},
+  {"name":"dynamic-names", "source":"ABC", "grammar":{"scopeName":"source.test","patterns":[{"match":"(ABC)","name":"entity.${1:/downcase} meta.$1","captures":{"1":{"name":"capture.$1"}}}]}},
+  {"name":"nested-captures", "source":"abc", "grammar":{"scopeName":"source.test","patterns":[{"match":"((ab)c)","captures":{"0":{"name":"whole"},"1":{"name":"outer"},"2":{"name":"inner"}}}]}},
+  {"name":"capture-outside", "source":"abc", "grammar":{"scopeName":"source.test","patterns":[{"match":"(?<=(a))(b)(?=(c))","captures":{"1":{"name":"before"},"2":{"name":"inside"},"3":{"name":"after"}}}]}},
+  {"name":"end-last", "source":"[xx]", "grammar":{"scopeName":"source.test","patterns":[{"begin":"\\[","end":"x|\\]","name":"brackets","applyEndPatternLast":true,"patterns":[{"match":"x","name":"letter"}]}]}},
+  {"name":"end-first", "source":"[xx]", "grammar":{"scopeName":"source.test","patterns":[{"begin":"\\[","end":"x|\\]","name":"brackets","patterns":[{"match":"x","name":"letter"}]}]}},
+  {"name":"g-root", "source":"word word\nword", "grammar":{"scopeName":"source.test","patterns":[{"match":"\\Gword","name":"anchored"}]}},
+  {"name":"g-begin", "source":"[xx]\n[x\nx]", "grammar":{"scopeName":"source.test","patterns":[{"begin":"\\[","end":"\\]","name":"brackets","patterns":[{"match":"\\Gx","name":"anchored"}]}]}},
+  {"name":"g-newline", "source":"[\nx\nx]", "grammar":{"scopeName":"source.test","patterns":[{"begin":"\\[\\n","end":"\\]","name":"brackets","patterns":[{"match":"\\Gx","name":"anchored"}]}]}},
+  {"name":"unicode", "source":"a😀β\n𝄞", "grammar":{"scopeName":"source.test","patterns":[{"match":"😀|𝄞","name":"astral"},{"match":"β","name":"greek"}]}},
+  {"name":"injection", "source":"TODO [TODO]", "grammar":{"scopeName":"source.test","patterns":[{"match":"TODO","name":"ordinary"},{"begin":"\\[","end":"\\]","name":"bracket"}],"injections":{"L:source.test - bracket":{"match":"TODO","name":"injected"}}}},
+  {"name":"onig-hex", "source":" 09aF xyz", "grammar":{"scopeName":"source.test","patterns":[{"match":"\\h+","name":"hex"}]}},
+  {"name":"onig-recursion", "source":"(a(b)c) d", "grammar":{"scopeName":"source.test","patterns":[{"match":"(?<pair>\\((?:[^()]|\\g<pair>)*\\))","name":"balanced"}]}},
+  {"name":"onig-named-backref", "source":"éé éé 😀", "grammar":{"scopeName":"source.test","patterns":[{"match":"(?<word>\\p{L}+)\\s+\\k<word>","name":"repeated"}]}},
+  {"name":"onig-class-intersection", "source":"aei bcdf ou", "grammar":{"scopeName":"source.test","patterns":[{"match":"[a-z&&[^aeiou]]+","name":"consonants"}]}}
+]
