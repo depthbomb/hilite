@@ -1,16 +1,19 @@
 # hilite
 
-A Python syntax highlighting library powered by Oniguruma.
+A Python syntax highlighting library powered by Oniguruma. Bring a TextMate
+grammar and a theme, and hilite turns your code into self-contained HTML.
 
 ## Getting started
 
-Source installs build a native extension, so you'll need Rust and a C compiler.
-On Windows, install Visual Studio Build Tools with the C++ tools. Then install
-from a local checkout using a virtual environment:
+Use Python 3.14 or newer in a virtual environment:
 
 ```console
-python -m pip install .
+python -m pip install hilite
 ```
+
+Prebuilt wheels are available for CPython 3.14 on Linux x64, Windows x64, and
+macOS 11+ on Apple Silicon. Other configurations build from source and need Rust and
+a C compiler. On Windows, use Visual Studio Build Tools with the C++ tools.
 
 Bring your own grammar and theme files. JSON and XML plist formats are supported;
 full language grammars and themes aren't bundled with the package.
@@ -98,7 +101,7 @@ python -m examples.lines_and_layout -o line-layout.html
 The examples include small demo grammars for Python, JavaScript, HTML, JSON, and
 shell, so they work without extra downloads. They cover the snippets shown, rather
 than every feature of those languages. See
-[`import_extension.py`](examples/import_extension.py) for highlighting a file with
+[`import_extension.py`](https://github.com/depthbomb/hilite/blob/master/examples/import_extension.py) for highlighting a file with
 an installed VS Code extension.
 
 ## Native builds
@@ -107,8 +110,9 @@ Wheels include the native extension and Oniguruma 6.9.10. Source installs compil
 the extension automatically and require a successful native build. Cargo may
 download its locked dependencies during compilation.
 
-Native builds are verified on Windows x64 with CPython 3.14. The build scripts
-support Linux and macOS, but those platforms are untested.
+CI builds and tests CPython 3.14 wheels on Linux x64, Windows x64, and macOS
+Apple Silicon. Linux wheels require glibc 2.28 or newer. Other Python versions
+and platforms aren't covered by CI.
 
 Invalid patterns raise an error with the grammar and rule location. Call
 `highlighter.validate('python')` to check a grammar before using it.
@@ -159,15 +163,15 @@ platform-specific native wheel. Check Rust changes with
 `cargo fmt --manifest-path native/Cargo.toml --check` and
 `cargo clippy --manifest-path native/Cargo.toml --lib -- -D warnings`.
 
-[`bench_highlighter.py`](benchmarks/bench_highlighter.py) measures highlighting across
+[`bench_highlighter.py`](https://github.com/depthbomb/hilite/blob/master/benchmarks/bench_highlighter.py) measures highlighting across
 languages, input sizes, and layouts. Run it with `--help` for the available options.
 
-The [test workflow](.github/workflows/tests.yml) checks Python 3.14 on Linux,
+The [test workflow](https://github.com/depthbomb/hilite/blob/master/.github/workflows/tests.yml) checks Python 3.14 on Linux,
 Windows, and macOS. It builds native wheels from the source archive, then tests
 the installed wheels with coverage and Chromium. Linux wheels use manylinux.
 
-The [release workflow](.github/workflows/release.yml) runs those checks again when
-a GitHub release is published. A final release tagged `v0.1.0` must match the
+The [release workflow](https://github.com/depthbomb/hilite/blob/master/.github/workflows/release.yml) runs those checks again when
+a GitHub release is published. The tag, such as `v0.1.0`, must match the
 version in `pyproject.toml`; prereleases and manual runs only validate. Publishing
 uses the `pypi` environment and requires a PyPI trusted publisher configured for
 `release.yml`. It uploads the distributions that passed CI.
