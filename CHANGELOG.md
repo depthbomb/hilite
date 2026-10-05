@@ -7,6 +7,16 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Fixed
+
+- Count only source spans against the token limit, excluding the synthetic final newline.
+- Apply line highlight colors and font styles to gaps in caller-supplied token spans.
+
+### Changed
+
+- Expand shared grammar includes once per scan while preserving rule priority.
+- Reduce temporary object creation during tokenization and rendering, and simplify single-capture styling.
+
 ## [0.1.0] - 2026-09-21
 
 ### Added

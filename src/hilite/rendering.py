@@ -22,14 +22,14 @@ _UNSAFE_CSS_VALUE = re.compile(r'[;{}<>\r\n]')
 _INVALID_HTML_TEXT = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff]')
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class _Run:
     start: int
     end: int
     style: Style
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class _Line:
     start: int
     content_end: int
@@ -133,9 +133,12 @@ def _styled_runs(
         except KeyError:
             style = resolve_style(span.scopes, theme, overrides)
             style_cache[span.scopes] = style
-        if runs and runs[-1].end == span.start and runs[-1].style == style:
-            previous = runs[-1]
-            runs[-1] = _Run(previous.start, span.end, style)
+        if (
+            runs
+            and runs[-1].end == span.start
+            and (runs[-1].style is style or runs[-1].style == style)
+        ):
+            runs[-1].end = span.end
         else:
             runs.append(_Run(span.start, span.end, style))
     return tuple(runs)
@@ -264,6 +267,8 @@ def _render_code(
         ]
         if emphasized and background is not None:
             css_properties.append(('background-color', background))
+        if emphasized:
+            css_properties.extend(style_to_css(token_override))
         content = _render_range(
             tokenized.source,
             runs,

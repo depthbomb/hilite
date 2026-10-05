@@ -65,6 +65,45 @@ def test_rendering_crlf_across_style_boundaries(decorated, gap):
     assert ''.join(collector.code_text) == 'a\nb'
 
 
+@pytest.mark.parametrize('with_token', [False, True])
+def test_line_foreground_and_font_style_cover_gaps_between_tokens(with_token):
+    class StyledText(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.styles = [{}]
+            self.text = []
+
+        def handle_starttag(self, tag, attrs):
+            style = dict(self.styles[-1])
+            for declaration in dict(attrs).get('style', '').split(';'):
+                if ':' in declaration:
+                    name, value = declaration.split(':', 1)
+                    style[name] = value
+            self.styles.append(style)
+
+        def handle_endtag(self, tag):
+            self.styles.pop()
+
+        def handle_data(self, data):
+            self.text.append((data, self.styles[-1]))
+
+    tokenized = TokenizedCode(
+        'abc', 'test', 'source.test', (TokenSpan(1, 2, ('keyword',)),) if with_token else ()
+    )
+    theme = Theme(rules=(ThemeRule('keyword', Style(foreground='#0000ff')),))
+    options = LineOptions(
+        emphasize=LineSelection(lines={1}),
+        highlight=LineHighlightStyle(foreground='#ff0000', bold=True, italic=False),
+    )
+    collector = StyledText()
+    collector.feed(render_html(tokenized, theme=theme, lines=options))
+    assert ''.join(text for text, _ in collector.text) == 'abc'
+    for _, style in collector.text:
+        assert style['color'] == '#ff0000'
+        assert style['font-weight'] == 'bold'
+        assert style['font-style'] == 'normal'
+
+
 @pytest.fixture
 def registry() -> GrammarRegistry:
     result = GrammarRegistry()

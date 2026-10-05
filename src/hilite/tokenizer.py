@@ -40,7 +40,7 @@ class Frame:
     begin_captured_eol: bool
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Candidate:
     start: int
     end: int
@@ -229,32 +229,43 @@ class Tokenizer:
             raise GrammarError('capture retokenization requires patterns')
         seen: set[tuple[tuple[str, str], ...]] = set()
         previous_position = -1
+        active_frame: Optional[Frame] = None
+        cached: Optional[_RuleScan] = None
         while position < len(text):
             self._check_deadline(deadline)
-            current_scopes = stack[-1].content_scopes if stack else root_scopes
-            owner_scope = (
-                stack[-1].owner_scope
-                if stack
-                else (capture.owner_scope if capture is not None else root.grammar.scope_name)
-            )
-            patterns = stack[-1].rule.patterns if stack else base_patterns
-            path = (
-                stack[-1].rule.path if stack else (capture.path if capture is not None else '$root')
-            )
-            # The same rule can pick up different injections under different scopes.
-            cache_key = (path, owner_scope, current_scopes)
-            cached = rule_cache.get(cache_key)
-            if cached is None:
-                rules = tuple(self._expanded_rules(patterns, root))
-                left, right = self._injection_rules(root, current_scopes)
-                ordered = (*left, *rules, *right)
-                scanner = Scanner(
-                    [rule.regex if isinstance(rule, MatchRule) else rule.begin for rule in ordered]
+            frame = stack[-1] if stack else None
+            # Match rules leave the frame unchanged, including its patterns and injections.
+            if cached is None or frame is not active_frame:
+                active_frame = frame
+                current_scopes = frame.content_scopes if frame is not None else root_scopes
+                owner_scope = (
+                    frame.owner_scope
+                    if frame is not None
+                    else (capture.owner_scope if capture is not None else root.grammar.scope_name)
                 )
-                cached = (ordered, len(left), len(rules), scanner)
-                if len(rule_cache) < 2048:
-                    rule_cache[cache_key] = cached
-            ordered_rules, left_count, rule_count, scanner = cached
+                patterns = frame.rule.patterns if frame is not None else base_patterns
+                path = (
+                    frame.rule.path
+                    if frame is not None
+                    else (capture.path if capture is not None else '$root')
+                )
+                # The same rule can pick up different injections under different scopes.
+                cache_key = (path, owner_scope, current_scopes)
+                cached = rule_cache.get(cache_key)
+                if cached is None:
+                    rules = tuple(self._expanded_rules(patterns, root))
+                    left, right = self._injection_rules(root, current_scopes)
+                    ordered = (*left, *rules, *right)
+                    scanner = Scanner(
+                        [
+                            rule.regex if isinstance(rule, MatchRule) else rule.begin
+                            for rule in ordered
+                        ]
+                    )
+                    cached = (ordered, len(left), len(rules), scanner)
+                    if len(rule_cache) < 2048:
+                        rule_cache[cache_key] = cached
+                ordered_rules, left_count, rule_count, scanner = cached
             candidate = self._pattern_candidate(
                 ordered_rules,
                 position,
@@ -265,18 +276,20 @@ class Tokenizer:
                 native_line,
             )
             # Half steps put the end rule between entries without reordering the scanner.
-            end_order = left_count - 0.5
-            if stack and stack[-1].rule.apply_end_last:
-                end_order += rule_count
-            end_candidate = self._end_candidate(
-                stack,
-                position,
-                deadline,
-                line_start == 0,
-                anchor_position,
-                native_line,
-                end_order,
-            )
+            end_candidate = None
+            if frame is not None and frame.end_regex is not None:
+                end_order = left_count - 0.5
+                if frame.rule.apply_end_last:
+                    end_order += rule_count
+                end_candidate = self._end_candidate(
+                    stack,
+                    position,
+                    deadline,
+                    line_start == 0,
+                    anchor_position,
+                    native_line,
+                    end_order,
+                )
             if end_candidate is not None and (
                 candidate is None
                 or (end_candidate.start, end_candidate.order) < (candidate.start, candidate.order)
@@ -400,26 +413,23 @@ class Tokenizer:
     ) -> Iterable[MatchRule | BeginRule]:
         # Keep our own stack so long include chains don't hit Python's recursion limit.
         visited: set[tuple[str, str]] = set()
-        pending: list[tuple[Iterator[CompiledRule], Optional[tuple[str, str]]]] = [
-            (iter(rules), None)
-        ]
+        pending: list[Iterator[CompiledRule]] = [iter(rules)]
         while pending:
-            iterator, parent_key = pending[-1]
-            rule = next(iterator, None)
+            rule = next(pending[-1], None)
             if rule is None:
                 pending.pop()
-                if parent_key is not None:
-                    # Block cycles in this branch, but allow reuse in a sibling branch.
-                    visited.remove(parent_key)
-                continue
-            if isinstance(rule, (MatchRule, BeginRule)):
-                yield rule
                 continue
             if isinstance(rule, ContainerRule):
-                pending.append((iter(rule.patterns), None))
+                pending.append(iter(rule.patterns))
                 continue
-            include_key = (rule.owner_scope, rule.path)
-            if include_key in visited:
+            key = (rule.owner_scope, rule.path)
+            if key in visited:
+                continue
+            # Repeated rules lose ties to their first occurrence. Visit each once
+            # across all branches so shared include graphs stay linear in size.
+            visited.add(key)
+            if isinstance(rule, (MatchRule, BeginRule)):
+                yield rule
                 continue
             targets: Iterable[CompiledRule]
             if rule.include.startswith('#'):
@@ -454,8 +464,7 @@ class Tokenizer:
                     targets = (target,)
                 else:
                     targets = external.patterns
-            visited.add(include_key)
-            pending.append((iter(targets), include_key))
+            pending.append(iter(targets))
 
     def _injection_rules(
         self,
@@ -617,6 +626,16 @@ class Tokenizer:
                 raise GrammarError(f'capture group {capture.group} does not exist') from error
             if capture_end <= capture_start or capture_end <= consumed:
                 continue
+            if len(captures) == 1 and capture.patterns is None:
+                self._emit(spans, context.offset + start, context.offset + capture_start, scopes)
+                self._emit(
+                    spans,
+                    context.offset + capture_start,
+                    context.offset + capture_end,
+                    scopes + _scope_names(capture.name, match),
+                )
+                self._emit(spans, context.offset + capture_end, context.offset + end, scopes)
+                return
             if capture.patterns is not None:
                 if nesting >= self._limits.max_nesting:
                     raise ResourceLimitError(
@@ -702,7 +721,9 @@ class Tokenizer:
             spans[-1] = TokenSpan(previous.start, end, scopes)
             return
         spans.append(TokenSpan(start, end, scopes))
-        if len(spans) > self._limits.max_spans:
+        # A line can temporarily end in a separate synthetic-newline span.
+        # tokenize() checks the exact document count after mapping it to the source.
+        if len(spans) > self._limits.max_spans + 1:
             raise ResourceLimitError(f'token span count exceeded {self._limits.max_spans}')
 
 

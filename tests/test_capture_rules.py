@@ -182,3 +182,30 @@ def test_many_capture_tokens_preserve_source_and_thread_safety():
     with ThreadPoolExecutor(max_workers=4) as pool:
         actual = list(pool.map(lambda _: highlighter.tokenize(source, language='test'), range(8)))
     assert all(result == expected for result in actual)
+
+
+@pytest.mark.parametrize(
+    'pattern,source,captured',
+    [
+        ('(a)b', 'ab', 'a'),
+        ('a(b)c', 'abc', 'b'),
+        ('a(b)', 'ab', 'b'),
+        ('(a)?b', 'b', ''),
+        ('(?=(a))a', 'a', 'a'),
+        ('(?<=(a))b', 'ab', ''),
+        ('a(?=(b))', 'ab', ''),
+        ('😀(é)', '😀é', 'é'),
+    ],
+)
+def test_single_capture_preserves_boundaries(pattern, source, captured):
+    highlighter = engine(
+        [{'match': pattern, 'name': 'match', 'captures': {'1': {'name': 'capture'}}}]
+    )
+    tokens = highlighter.tokenize(source, language='test')
+    assert ''.join(source[span.start : span.end] for span in tokens.spans) == source
+    assert (
+        ''.join(
+            source[span.start : span.end] for span in tokens.spans if span.scopes[-1] == 'capture'
+        )
+        == captured
+    )

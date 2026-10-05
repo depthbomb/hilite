@@ -424,3 +424,70 @@ def test_random_inputs_preserve_offsets_and_parallel_results():
     expected = [tokenize(source) for source in sources]
     with ThreadPoolExecutor(max_workers=4) as executor:
         assert list(executor.map(tokenize, sources)) == expected
+
+
+@pytest.mark.parametrize('source,limit', [('x', 1), ('x\nx', 3), ('x\r\nx', 3)])
+def test_span_limit_does_not_count_synthetic_final_newline(source, limit):
+    highlighter = engine([{'match': 'x', 'name': 'letter'}])
+    highlighter = Highlighter(highlighter.registry, limits=ResourceLimits(max_spans=limit))
+    tokens = highlighter.tokenize(source, language='test')
+    assert len(tokens.spans) == limit
+    assert ''.join(source[span.start : span.end] for span in tokens.spans) == source
+
+
+@pytest.mark.parametrize('source', ['x\n', 'x\r\n', 'xy', 'x\nx'])
+def test_span_limit_still_counts_real_text(source):
+    highlighter = engine([{'match': 'x', 'name': 'letter'}])
+    highlighter = Highlighter(highlighter.registry, limits=ResourceLimits(max_spans=1))
+    with pytest.raises(ResourceLimitError, match='span count'):
+        highlighter.tokenize(source, language='test')
+
+
+@pytest.mark.parametrize('cyclic', [False, True])
+def test_shared_includes_preserve_priority_without_duplicate_scans(monkeypatch, cyclic):
+    from hilite._oniguruma import Scanner
+
+    repository = {
+        f'r{index}': {
+            'patterns': [{'include': f'#r{index + 1}'}, {'include': f'#r{index + 1}'}],
+        }
+        for index in range(10)
+    }
+    repository['r10'] = {
+        'patterns': [
+            *([{'include': '#r0'}] if cyclic else []),
+            {'match': 'x', 'name': 'first'},
+            {'match': 'x', 'name': 'shadowed'},
+            {'match': 'y', 'name': 'other'},
+        ],
+    }
+    counts = []
+
+    def scanner(patterns):
+        counts.append(len(patterns))
+        return Scanner(patterns)
+
+    monkeypatch.setattr('hilite.tokenizer.Scanner', scanner)
+    highlighter = engine(
+        [{'include': '#r0'}, {'match': 'x', 'name': 'fallback'}], repository=repository
+    )
+    tokens = highlighter.tokenize('xy', language='test')
+    assert [span.scopes[-1] for span in tokens.spans] == ['first', 'other']
+    assert counts and max(counts) == 4
+
+
+def test_nameless_begin_rules_switch_patterns_on_entry_and_exit():
+    highlighter = engine(
+        [
+            {'begin': r'\(', 'end': r'\)', 'patterns': [{'match': 'x', 'name': 'inner'}]},
+            {'match': 'x', 'name': 'outer'},
+        ]
+    )
+    tokens = highlighter.tokenize('xx(xx)xx', language='test')
+    assert [(tokens.source[span.start : span.end], span.scopes[-1]) for span in tokens.spans] == [
+        ('xx', 'outer'),
+        ('(', 'source.test'),
+        ('xx', 'inner'),
+        (')', 'source.test'),
+        ('xx', 'outer'),
+    ]
