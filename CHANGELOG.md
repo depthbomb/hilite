@@ -7,15 +7,21 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-04
+
 ### Fixed
 
-- Count only source spans against the token limit, excluding the synthetic final newline.
-- Apply line highlight colors and font styles to gaps in caller-supplied token spans.
+- Fix synthetic newlines incorrectly counting toward token limits.
+- Fix line highlight colors and font styles skipping gaps between tokens.
 
 ### Changed
 
-- Expand shared grammar includes once per scan while preserving rule priority.
-- Reduce temporary object creation during tokenization and rendering, and simplify single-capture styling.
+- Avoid repeated work when expanding shared grammar includes.
+- Improve tokenization and rendering performance.
+
+### Added
+
+- Add regression tests and a shared-include benchmark.
 
 ## [0.1.0] - 2026-09-21
 
@@ -23,5 +29,6 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 - Initial release
 
-[Unreleased]: https://github.com/depthbomb/hilite/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/depthbomb/hilite/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/depthbomb/hilite/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/depthbomb/hilite/releases/tag/v0.1.0
